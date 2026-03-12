@@ -1,0 +1,651 @@
+SYSTEMATIC TRADING STRATEGY DEVELOPMENT FRAMEWORK
+
+==============================================================================
+EXECUTIVE SUMMARY
+==============================================================================
+
+This document provides a structured methodology for developing profitable trading strategies as a retail trader with limited capital ($1,000 starting point). The framework prioritizes slower, structurally persistent edges where patience and disciplined execution matter more than speed. Each section defines clear research directions, testable hypotheses, and iteration protocols that can be executed systematically by human or AI agents.
+
+Core principle: Retail traders cannot compete on speed, so success comes from medium- to low-frequency strategies that capture behavioral and structural market effects.
+
+==============================================================================
+STRATEGY DEVELOPMENT PHILOSOPHY
+==============================================================================
+
+WHY RETAIL CAN COMPETE
+
+Professional research demonstrates that slower trading strategies still capture durable effects even when high-frequency trading dominates short-term markets. The key advantages for retail traders are:
+
+• Lower infrastructure costs allow focus on strategy logic rather than latency optimization
+• Ability to trade smaller size without market impact concerns
+• Flexibility to enter and exit positions without institutional constraints
+• Access to diverse venues including crypto exchanges with retail-friendly APIs
+
+SUCCESS CRITERIA
+
+A strategy is considered promising if it meets all four criteria:
+
+1. Behavioral or structural rationale: The edge stems from underreaction, overreaction, hedging pressure, regime persistence, or funding mechanics—not curve-fitting
+2. Survives realistic costs: Returns remain positive after fees, slippage, and execution delays
+3. Parameter robustness: Performance holds across nearby parameter values, not just one optimal setting
+4. Simple explanation: The logic can be stated clearly in one paragraph without vague intuition
+
+==============================================================================
+RISK MANAGEMENT FRAMEWORK (UNIVERSAL)
+==============================================================================
+
+Before exploring any strategy, implement these non-negotiable risk controls:
+
+RISK CONTROL               | SPECIFICATION
+---------------------------|--------------------------------------------------
+Risk per trade             | 1-2% of account equity
+Daily loss limit           | 3% drawdown triggers pause
+Portfolio drawdown limit   | 10-15% peak-to-trough triggers review
+Position concentration     | Max 25% in single asset
+Leverage                   | Start with 2x or less (micro futures)
+Liquidity requirement      | Only highly liquid instruments
+Kill switch                | Automated halt on API failure or abnormal behavior
+
+Critical implementation note: For a $1,000 account, 1% risk per trade means $10 maximum loss per position. This requires precise position sizing and stop-loss placement.
+
+==============================================================================
+STRATEGY FAMILY 1: TREND FOLLOWING
+==============================================================================
+
+OVERVIEW
+
+Trend following or time-series momentum has demonstrated profitability across markets and over century-long time horizons. The core hypothesis is that price trends persist due to behavioral underreaction, momentum chasing, and institutional flows.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 1.1: DAILY BREAKOUT TREND (CRYPTO PERPETUALS)
+------------------------------------------------------------------------------
+
+Market: BTC/USDT or ETH/USDT perpetuals on Hyperliquid, Binance, or similar
+Timeframe: Daily bars
+
+Core Logic:
+• Enter long when price breaks above N-day high
+• Enter short when price breaks below N-day low
+• Exit on opposite breakout or when price crosses M-day moving average (M < N)
+• Use volatility-based position sizing
+
+Iteration Protocol:
+1. Baseline test: N=50, M=20, test on BTC from 2020-2026
+2. Parameter sweep: Test N in [30, 40, 50, 60, 70], M in [10, 15, 20, 25, 30]
+3. Robustness check: Apply same parameters to ETH without reoptimization
+4. Cost sensitivity: Reduce returns by 0.05%, 0.10%, 0.15% per trade to simulate slippage
+5. Regime analysis: Measure performance in trending vs ranging markets (use ADX to classify)
+
+Evaluation Metrics:
+• Sharpe ratio > 0.5 after costs
+• Maximum drawdown < 30%
+• Win rate > 35% (trend strategies typically have low win rates but positive skew)
+• Profit factor > 1.3
+• Performance stable across 80% of parameter combinations tested
+
+Failure Mode: Excessive whipsaws in ranging markets. Consider adding volatility filter or ADX threshold.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 1.2: MOVING AVERAGE TREND FILTER (ETFs)
+------------------------------------------------------------------------------
+
+Market: Highly liquid ETFs (SPY, QQQ, GLD, TLT)
+Timeframe: Daily or weekly bars
+
+Core Logic:
+• Long position when price > N-day simple moving average
+• Cash when price < N-day simple moving average
+• Rebalance at close
+• No short positions (long/cash only)
+
+Iteration Protocol:
+1. Baseline test: N=200 on SPY from 2010-2026
+2. Parameter sweep: Test N in [50, 100, 150, 200, 250]
+3. Multi-asset validation: Apply best N to QQQ, GLD, TLT without reoptimization
+4. Transaction cost: Assume 0.1% per trade (includes spread + commission)
+5. Timing variation: Test entry/exit at open vs close
+
+Evaluation Metrics:
+• Sharpe ratio > 0.6 after costs
+• Maximum drawdown < 25%
+• Fewer than 20 trades per year (low turnover critical for costs)
+• Outperforms buy-and-hold on risk-adjusted basis during bear markets
+
+Failure Mode: Long flat periods with no signal. This is expected—trend following sacrifices participation for protection.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 1.3: VOLATILITY-ADJUSTED POSITION SIZING
+------------------------------------------------------------------------------
+
+Enhancement Layer: Apply to any trend-following base strategy
+
+Core Logic:
+• Calculate realized volatility over K days (e.g., K=20)
+• Scale position size inversely to volatility
+• Target constant dollar volatility per position
+• Formula: Position size = (Target Vol × Account Equity) / (Price × Realized Vol)
+
+Iteration Protocol:
+1. Apply to baseline trend strategy (1.1 or 1.2)
+2. Test K in [10, 20, 30, 40, 50]
+3. Test target volatility in [0.5%, 1.0%, 1.5%, 2.0%] of account per day
+4. Compare Sharpe ratio and maximum drawdown vs fixed-size positions
+5. Verify sizing logic never creates positions larger than fixed maximum
+
+Expected Outcome: Higher Sharpe ratio, lower maximum drawdown, smoother equity curve.
+
+==============================================================================
+STRATEGY FAMILY 2: MOMENTUM AND ROTATION
+==============================================================================
+
+OVERVIEW
+
+Cross-sectional momentum and time-series momentum both show persistent performance across asset classes. Rotation strategies rank assets by recent performance and allocate to the strongest, exploiting relative strength persistence.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 2.1: MULTI-ASSET MOMENTUM ROTATION
+------------------------------------------------------------------------------
+
+Market: Liquid basket (e.g., BTC, ETH, SPY, QQQ, GLD, TLT, DXY futures)
+Timeframe: Weekly or monthly rebalance
+
+Core Logic:
+• Calculate N-period return for each asset
+• Rank assets by return
+• Hold top K assets with equal weight
+• Rebalance every M periods
+• Cash allocation for bottom-ranked assets
+
+Iteration Protocol:
+1. Baseline test: 7 assets, N=90 days, K=3, M=7 days (weekly rebalance)
+2. Lookback sweep: Test N in [30, 60, 90, 120, 180] days
+3. Concentration sweep: Test K in [1, 2, 3, 4, 5]
+4. Rebalance frequency: Test M in [7, 14, 30] days
+5. Cost sensitivity: Assume 0.1% per trade, calculate total cost per rebalance
+6. Correlation analysis: Measure strategy correlation to SPY buy-and-hold
+
+Evaluation Metrics:
+• Sharpe ratio > 0.7
+• Maximum drawdown < 30%
+• Low correlation to buy-and-hold equity (target < 0.6)
+• Turnover < 200% annually
+• Positive performance in at least 65% of rolling 12-month periods
+
+Failure Mode: Sharp reversals during regime changes. Consider adding trend filter overlay.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 2.2: CRYPTO CROSS-SECTIONAL MOMENTUM
+------------------------------------------------------------------------------
+
+Market: Top 10-20 cryptocurrencies by market cap and liquidity
+Timeframe: Daily or weekly rebalance
+
+Core Logic:
+• Rank cryptos by N-day return
+• Long top K, short (or avoid) bottom K
+• Rebalance every M days
+• Apply volatility or market cap weighting
+
+Iteration Protocol:
+1. Universe selection: Start with top 10 by 30-day average volume
+2. Baseline test: N=14, K=3, M=7, equal weight, long-only
+3. Parameter sweep: N in [7, 14, 21, 30], K in [2, 3, 4, 5]
+4. Weighting schemes: Test equal weight vs volatility-scaled vs market-cap weighted
+5. Long/short test: Compare long-only vs long-short (if venue supports)
+6. Drawdown analysis: Identify periods of failure and test regime filters
+
+Evaluation Metrics:
+• Sharpe ratio > 0.5 (crypto volatility is high)
+• Maximum drawdown < 40%
+• Alpha vs BTC > 5% annually
+• Strategy works in both bull and bear crypto regimes
+
+Failure Mode: High turnover and slippage in crypto markets. Ensure fills are realistic.
+
+==============================================================================
+STRATEGY FAMILY 3: MEAN REVERSION
+==============================================================================
+
+OVERVIEW
+
+Mean reversion exploits temporary price dislocations that revert to average levels. Critical constraint: mean reversion works better on slower timeframes for retail traders because short-term reversion is heavily competed and cost-sensitive.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 3.1: RSI AND BOLLINGER BAND MEAN REVERSION
+------------------------------------------------------------------------------
+
+Market: BTC, ETH, or liquid ETFs (SPY, QQQ)
+Timeframe: 4-hour or daily bars
+
+Core Logic:
+• Buy when: Price < lower Bollinger Band AND RSI < oversold threshold
+• Sell when: Price > middle Bollinger Band OR RSI > neutral threshold
+• Use fixed stop-loss at X% below entry
+• No position when trend filter is bearish
+
+Iteration Protocol:
+1. Baseline test: 20-period Bollinger (2 std dev), RSI(14) < 30, exit at mid-band
+2. Bollinger sweep: Test periods [10, 15, 20, 25, 30], std dev [1.5, 2.0, 2.5]
+3. RSI sweep: Test RSI period [10, 14, 21], threshold [20, 25, 30, 35]
+4. Stop-loss sweep: Test stops at [2%, 3%, 5%, 7%] below entry
+5. Trend filter: Only trade when price > 50-day MA or ADX < 25 (non-trending)
+6. Cost test: Reduce returns by 0.1% and 0.2% per round trip
+
+Evaluation Metrics:
+• Sharpe ratio > 0.6
+• Win rate > 50% (mean reversion should have higher win rate than trend)
+• Average win / average loss > 1.2
+• Maximum consecutive losses < 7
+• Performance improves with trend filter applied
+
+Failure Mode: Strategy tries to catch falling knives in strong trends. Trend filter is essential.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 3.2: REGIME-FILTERED MEAN REVERSION
+------------------------------------------------------------------------------
+
+Enhancement Layer: Apply regime detection before mean reversion signals
+
+Core Logic:
+• Define regime using ADX, volatility, or trend slope
+• Ranging regime: ADX < 25 or flat 50-day MA
+• Trending regime: ADX > 30 or steep 50-day MA
+• Enable mean reversion signals only in ranging regimes
+• Disable or reverse to trend-following in trending regimes
+
+Iteration Protocol:
+1. Apply to baseline mean reversion strategy (3.1)
+2. Regime definition test: Compare ADX vs MA slope vs realized volatility
+3. Threshold sweep: Test ADX thresholds [20, 25, 30, 35]
+4. Hybrid test: In trending regime, switch to simple trend-following
+5. Compare performance vs unconditional mean reversion
+6. Measure false regime classifications and impact
+
+Expected Outcome: Higher Sharpe ratio, fewer catastrophic losses during trends.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 3.3: GAP-FADE STRATEGY (ETFs/INDEX PRODUCTS)
+------------------------------------------------------------------------------
+
+Market: Highly liquid ETFs (SPY, QQQ) or index futures
+Timeframe: Intraday to 3-day holding period
+
+Core Logic:
+• Identify overnight gaps > N% from previous close
+• Enter position at open betting on partial gap-fill
+• Exit at target (50% or 100% gap-fill) or stop-loss
+• Time-based exit after M days if neither target nor stop hit
+
+Iteration Protocol:
+1. Baseline test: Gap > 1%, target 50% fill, stop at -0.5%, 1-day hold max
+2. Gap threshold: Test [0.5%, 0.75%, 1.0%, 1.5%, 2.0%]
+3. Target sweep: Test [30%, 50%, 75%, 100%] gap-fill
+4. Stop-loss: Test [-0.3%, -0.5%, -0.75%, -1.0%]
+5. Holding period: Test [same day, 1 day, 2 days, 3 days]
+6. Direction filter: Test gap-up only, gap-down only, or both
+7. Regime filter: Test if performance differs in high vs low VIX environments
+
+Evaluation Metrics:
+• Win rate > 55%
+• Average win / average loss > 1.5
+• Profit factor > 1.5
+• Low correlation to directional equity strategies
+• Works on both gap-up and gap-down or shows clear directional bias
+
+Failure Mode: Large gaps often signal regime change rather than noise. Filter by VIX or news events.
+
+==============================================================================
+STRATEGY FAMILY 4: STRUCTURAL AND CARRY STRATEGIES
+==============================================================================
+
+OVERVIEW
+
+Structural strategies exploit predictable premia from futures curves, funding rates, and hedging demand rather than price prediction. These strategies can be less directional but carry tail risk and operational complexity.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 4.1: CRYPTO FUNDING RATE CAPTURE
+------------------------------------------------------------------------------
+
+Market: BTC/USDT and ETH/USDT perpetuals (Hyperliquid, Binance, etc.)
+Timeframe: Daily rebalancing
+
+Core Logic:
+• Monitor 8-hour funding rate
+• When funding rate > threshold (e.g., +0.05% per 8h), open delta-neutral position
+• Long spot (or spot-like) + short perpetual
+• Close when funding drops below exit threshold or after N days
+• Risk management: monitor mark price spread and liquidation distance
+
+Iteration Protocol:
+1. Data collection: Gather historical funding rate data for BTC and ETH (2020-2026)
+2. Baseline test: Entry at +0.05% funding, exit at +0.01%, 7-day max hold
+3. Entry threshold: Test [+0.03%, +0.05%, +0.08%, +0.10%]
+4. Exit threshold: Test [0%, +0.01%, +0.02%]
+5. Hold period: Test [3, 7, 14, 30] day maximum
+6. Cost analysis: Include spot-perp spread, trading fees, withdrawal fees if applicable
+7. Tail risk: Backtest through major liquidation events (e.g., May 2021, Nov 2022, March 2025)
+
+Evaluation Metrics:
+• Sharpe ratio > 1.0 (funding strategies should be smoother than directional)
+• Maximum drawdown < 15%
+• Positive return in > 70% of months
+• Low correlation to BTC price direction (< 0.3)
+• Strategy survives major de-leveraging events
+
+Failure Mode: Funding can flip negative suddenly, or venue risk (exchange issues, liquidation engine failures).
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 4.2: BASIS OR CASH-AND-CARRY (FUTURES/SPOT)
+------------------------------------------------------------------------------
+
+Market: BTC or ETH spot vs quarterly futures, or traditional futures vs spot ETFs
+Timeframe: Monthly or quarterly roll
+
+Core Logic:
+• When futures trade at premium > cost threshold, execute cash-and-carry
+• Long spot, short equal notional futures
+• Hold to expiry or roll
+• Collect basis convergence as profit
+• Monitor margin, collateral, and counterparty risk
+
+Iteration Protocol:
+1. Data: Historical spot vs futures basis for target market
+2. Baseline test: Enter when annualized basis > 10%, hold to expiry
+3. Entry threshold: Test [5%, 8%, 10%, 12%, 15%] annualized basis
+4. Exit: Test hold-to-expiry vs early exit when basis < 3%
+5. Cost model: Include borrow costs (if shorting spot), margin, fees, slippage
+6. Roll strategy: Test rolling 1 week vs 1 day before expiry
+7. Risk events: Backtest through liquidity crises and basis compression events
+
+Evaluation Metrics:
+• Sharpe ratio > 1.2
+• Maximum drawdown < 10%
+• Consistent returns across roll periods
+• Profit per trade > 2% after all costs
+• Strategy robust to funding or margin rate changes
+
+Failure Mode: Basis compression during crisis, counterparty or venue failure, unexpected costs.
+
+------------------------------------------------------------------------------
+RESEARCH DIRECTION 4.3: CROSS-SECTIONAL CARRY (FUTURES CURVE)
+------------------------------------------------------------------------------
+
+Market: Portfolio of liquid futures (commodities, rates, equity indices)
+Timeframe: Monthly rebalancing
+
+Core Logic:
+• Rank futures by roll yield or carry (backwardation vs contango)
+• Long high-carry (backwardated) contracts
+• Short low-carry (contango) contracts or hold cash
+• Rebalance monthly
+
+Iteration Protocol:
+1. Universe: Select 10-15 liquid futures across asset classes
+2. Carry definition: Test (nearby price - next contract price) / nearby price
+3. Baseline test: Long top 3, short bottom 3, equal weight, monthly rebalance
+4. Concentration: Test top/bottom [2, 3, 4, 5]
+5. Weighting: Equal vs carry-magnitude weighted
+6. Long-only test: Compare long-short vs long-only top carry
+7. Cost model: Include roll costs, commissions, bid-ask spread
+
+Evaluation Metrics:
+• Sharpe ratio > 0.8
+• Maximum drawdown < 25%
+• Low correlation to equity markets
+• Positive skew (small frequent gains, rare large losses avoided)
+
+Failure Mode: Carry can persist for long periods before mean reversion. Requires patience and diversification.
+
+==============================================================================
+STRATEGY DEVELOPMENT WORKFLOW
+==============================================================================
+
+PHASE 1: HYPOTHESIS FORMATION (1-2 days)
+
+1. Select one strategy family (trend, momentum, mean reversion, or carry)
+2. Choose one specific research direction from this document
+3. Write down clear entry, exit, stop-loss, and position-sizing rules
+4. State expected behavioral or structural reason for edge
+5. Define success criteria before testing
+
+PHASE 2: DATA PREPARATION (1-3 days)
+
+1. Identify data source (exchange API, vendor, free source)
+2. Download historical data covering at least 3 years, preferably 5+
+3. Clean data: remove errors, adjust for splits/dividends if applicable
+4. Verify data quality: check for gaps, outliers, timezone consistency
+5. Separate into in-sample (60-70%) and out-of-sample (30-40%) periods
+
+PHASE 3: BASELINE BACKTEST (2-3 days)
+
+1. Implement strategy logic in Python, R, or preferred language
+2. Run baseline test on in-sample period with fixed parameters
+3. Calculate: total return, Sharpe ratio, max drawdown, win rate, profit factor, turnover
+4. Visualize: equity curve, drawdown plot, monthly returns heatmap
+5. Document: code, assumptions, transaction cost model
+
+PHASE 4: PARAMETER SWEEP AND ROBUSTNESS TESTING (3-5 days)
+
+1. Run grid search over parameter ranges defined in research direction
+2. Record performance for each parameter combination
+3. Generate heatmaps showing Sharpe ratio across 2D parameter space
+4. Identify stable regions (where nearby parameters give similar results)
+5. Check performance degradation with increasing transaction costs
+
+PHASE 5: OUT-OF-SAMPLE VALIDATION (1-2 days)
+
+1. Select parameters from stable region identified in Phase 4
+2. Run strategy on out-of-sample data without any adjustments
+3. Compare out-of-sample Sharpe ratio to in-sample (expect 20-40% degradation)
+4. If degradation > 50%, strategy is likely overfit—reject and start over
+5. Document out-of-sample results honestly
+
+PHASE 6: MULTI-ASSET AND REGIME TESTING (2-3 days)
+
+1. Apply same parameters to different but related markets
+2. Test performance separately in bull, bear, and sideways regimes
+3. Calculate correlation to major benchmarks (SPY, BTC, etc.)
+4. Identify when strategy works and when it fails
+5. Document failure modes clearly
+
+PHASE 7: PAPER TRADING (2-4 weeks minimum)
+
+1. Implement strategy on paper trading account (Alpaca, IBKR Paper, exchange testnet)
+2. Run continuously for at least 2 weeks, preferably 4+ weeks
+3. Monitor: order fills, slippage, latency, API errors, unexpected costs
+4. Compare paper results to backtest expectations
+5. Adjust transaction cost model based on real observations
+
+PHASE 8: MICRO-LIVE TESTING (4-8 weeks)
+
+1. Deploy strategy with smallest possible position sizes (e.g., $100-$200 risk)
+2. Monitor daily: fills, PnL, logs, errors, risk metrics
+3. Keep detailed log: every signal, order, fill, and manual intervention
+4. Calculate actual Sharpe ratio and compare to backtest
+5. Scale position size only after 4+ weeks of stable operation
+
+PHASE 9: ITERATION AND PORTFOLIO CONSTRUCTION (Ongoing)
+
+1. After validating 2-3 independent strategies, run them in parallel
+2. Monitor correlation between strategies
+3. Allocate capital based on risk-adjusted returns and correlation
+4. Continue researching new directions from this framework
+5. Replace or modify strategies that degrade over time
+
+==============================================================================
+EVALUATION AND KILL CRITERIA
+==============================================================================
+
+WHEN TO CONTINUE RESEARCH
+
+A strategy deserves further development if:
+• In-sample Sharpe ratio > 0.7 after realistic costs
+• Out-of-sample Sharpe ratio > 0.5 and within 40% of in-sample
+• Performance stable across 60-80% of parameter grid
+• Clear behavioral or structural explanation exists
+• Maximum drawdown tolerable for account size (< 30% for aggressive, < 20% for conservative)
+• Strategy makes sense intuitively and survives sanity checks
+
+WHEN TO KILL A STRATEGY
+
+Reject a strategy immediately if:
+• Out-of-sample performance degrades > 50% vs in-sample (overfitting)
+• Sharpe ratio < 0.3 after realistic costs
+• Maximum drawdown > 40%
+• Performance highly sensitive to one exact parameter value
+• Profit comes from 1-2 lucky trades (lack of consistency)
+• Cannot explain why edge should exist
+• Paper trading results significantly worse than backtest despite correct cost model
+
+WHEN TO STOP LIVE TRADING
+
+Halt or retire a live strategy if:
+• Sharpe ratio drops below 0.2 for 6+ months
+• Drawdown exceeds maximum historical drawdown by 50%
+• Market structure changes (e.g., venue fees increase, liquidity deteriorates)
+• Correlation to benchmark increases significantly (edge commoditizing)
+• Better alternative strategy validated and ready to replace it
+
+==============================================================================
+AUTOMATION BEST PRACTICES
+==============================================================================
+
+ARCHITECTURE PRINCIPLES
+
+1. Modularity: Separate signal generation, risk management, execution, and monitoring into independent modules
+2. Logging: Log every signal, order, fill, cancellation, error, and risk metric with timestamps
+3. Kill switches: Implement automatic halt on daily loss limit, API failure, abnormal slippage, or data staleness
+4. Monitoring: Track equity, open positions, risk metrics, and heartbeat status in real-time dashboard
+5. Backtesting engine: Use same code for backtest and live trading to prevent logic drift
+
+RISK CONTROLS IN CODE
+
+Every automated strategy must enforce:
+• Maximum position size per instrument (hardcoded limit)
+• Maximum portfolio heat (sum of all position risks < 5-10%)
+• Daily loss limit (pause trading after 3% loss)
+• Order rate limits (respect exchange API limits)
+• Stale data detection (reject signals if market data > N seconds old)
+• Liquidation distance monitoring (especially for leveraged positions)
+
+EXECUTION QUALITY MONITORING
+
+Track these metrics to detect execution degradation:
+• Slippage: difference between expected price and fill price
+• Fill rate: percentage of orders that execute vs reject
+• Latency: time from signal to order acknowledgment
+• Partial fills: frequency and size of incomplete orders
+• Rejected orders: categorize by error type and frequency
+
+If execution quality deteriorates significantly, pause strategy and investigate before resuming.
+
+==============================================================================
+MARKET AND VENUE SELECTION
+==============================================================================
+
+IDEAL MARKETS FOR RETAIL AUTOMATION
+
+MARKET          | ADVANTAGES                      | RISKS
+----------------|----------------------------------|----------------------------------
+BTC/ETH perps   | High liquidity, 24/7, API-friendly | Volatility, funding risk, venue risk
+Major ETFs      | Low cost, stable, regulated      | PDT rule (US), lower volatility
+Micro futures   | Leverage, diverse assets, low minimums | Complexity, roll management
+Liquid altcoins | Higher returns possible          | Liquidity gaps, manipulation
+
+Recommendation for $1,000 account: Start with BTC or ETH perpetuals on reputable exchange, then add major ETFs once capital grows.
+
+VENUE SELECTION CRITERIA
+
+When choosing a trading venue, evaluate:
+1. API quality: Comprehensive documentation, stable endpoints, good rate limits
+2. Liquidity: Tight spreads, deep order book, minimal slippage
+3. Fees: Maker/taker structure, volume discounts, withdrawal costs
+4. Reliability: Uptime history, liquidation engine quality, settlement process
+5. Risk controls: Margin system, liquidation logic, insurance fund
+6. Regulatory status: Jurisdiction, licensing, user protections
+
+For Hyperliquid specifically: Strong API, good liquidity on majors, but higher platform risk than established centralized exchanges. Use isolated margin and conservative leverage.
+
+==============================================================================
+CONTINUOUS IMPROVEMENT PROCESS
+==============================================================================
+
+MONTHLY REVIEW CHECKLIST
+
+• Review equity curve and compare to expectations
+• Calculate realized Sharpe ratio and compare to backtest
+• Analyze losing trades: were they expected or anomalous?
+• Check correlation between live strategies
+• Monitor market regime and assess if current strategies are appropriate
+• Review logs for errors, API issues, or operational problems
+• Update transaction cost model based on actual fills
+
+QUARTERLY STRATEGIC REVIEW
+
+• Evaluate each strategy's continued viability
+• Research 1-2 new directions from this framework
+• Adjust capital allocation based on recent performance
+• Update risk parameters if account has grown significantly
+• Review venue and market selection
+• Assess whether manual intervention frequency is acceptable
+• Plan next phase of automation or strategy development
+
+ANNUAL DEEP ANALYSIS
+
+• Full performance attribution: which strategies contributed most?
+• Compare actual results to initial projections
+• Identify biggest surprises (positive and negative)
+• Reassess entire strategy portfolio: keep, modify, or retire each
+• Update this framework document based on learnings
+• Set goals for next year: target Sharpe ratio, drawdown limits, new strategies to research
+
+==============================================================================
+CONCLUSION
+==============================================================================
+
+Profitable trading for retail participants is possible but requires systematic methodology, realistic expectations, and disciplined execution. The directions outlined in this framework prioritize edges that do not depend on speed, infrastructure advantages, or large capital.
+
+SUCCESS FORMULA:
+
+1. Choose one strategy family that fits your strengths and interests
+2. Follow the iteration protocol rigorously without shortcuts
+3. Implement strict risk management before, during, and after testing
+4. Move slowly from backtest to paper to micro-live to full scale
+5. Build a portfolio of 2-4 uncorrelated strategies over 6-12 months
+6. Continuously monitor, evaluate, and improve
+
+The goal is not to find one perfect strategy, but to build a systematic process that consistently generates and validates profitable trading ideas across changing market conditions.
+
+==============================================================================
+REFERENCES
+==============================================================================
+
+[1] Hurst, B., Ooi, Y. H., & Pedersen, L. H. (2017). A century of evidence on trend-following investing. The Journal of Portfolio Management, 44(1), 15-29. https://www.aqr.com/Insights/Research/Journal-Article/A-Century-of-Evidence-on-Trend-Following-Investing
+
+[2] LuxAlgo. (2025, June 24). Can retail algo traders compete with Wall Street? https://www.luxalgo.com/blog/can-retail-algo-traders-compete-with-wall-street/
+
+[3] YouTube. (2026, March 7). Can retail traders compete with AI systems? https://www.youtube.com/watch?v=8vvib1iQ5nI
+
+[4] Alpha Architect. (2022, May 12). Time series momentum (aka trend-following): A good time for a refresh. https://alphaarchitect.com/time-series-momentum-aka-trend-following-the-historical-evidence/
+
+[5] ReturnStacked. (2025, July 31). Managed futures yield (carry). https://www.returnstacked.com/managed-futures-yield-carry/
+
+[6] Interactive Brokers. (2024, August 27). Mean reversion strategies: Introduction, trading, strategies and more. https://www.interactivebrokers.com/campus/ibkr-quant-news/mean-reversion-strategies-introduction-trading-strategies-and-more-par
+
+[7] uTrade Algos. (2026, March 4). Algorithmic trading risk management. https://www.utradealgos.com/blog/risk-management-in-algo-trading
+
+[8] uTrade Algos. (2026, March 8). How to manage risk in algo trading. https://www.utradealgos.com/blog/how-to-manage-risk-in-algo-trading
+
+[9] Quantpedia. (2024, September 22). Quantpedia explains (Trading strategies) episode 95. https://www.linkedin.com/posts/quantpedia_quantpedia-explains-trading-strategies-activity-7243866882598965248-Ucre
+
+[10] Edgeful. (2025, December 17). Mean reversion strategy: How to trade pullbacks and reversals. https://www.edgeful.com/blog/posts/mean-reversion-strategy
+
+[11] Decentralised News. (2026, January 19). Crypto basis trading in 2026: Institutional cash-and-carry, perpetual funding, delta-neutral yield strategies. https://decentralised.news/crypto-basis-trading-in-2026-institutional-cash-and-carry-perpetual-funding-delta-neutral-yield-strat
+
+[12] Alpha Node. (2025, September 13). What is a basis trade in crypto? Market-neutral yield. https://alphanode.global/insights/crypto-basis-trade-guide/
+
+[13] Hyperliquid Docs. (2025-2026). Liquidations, margining, and rate limits. https://hyperliquid.gitbook.io/hyperliquid-docs/
+
+==============================================================================
+END OF DOCUMENT
+==============================================================================
