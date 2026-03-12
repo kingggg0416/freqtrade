@@ -1,0 +1,31 @@
+{
+  "strategy_name": "MomentumPulseStrategy",
+  "params": {
+    "roi": {
+      "0": 0.18
+    },
+    "stoploss": {
+      "stoploss": -0.06
+    },
+    "trailing": {
+      "trailing_stop": false,
+      "trailing_stop_positive": null,
+      "trailing_stop_positive_offset": 0.0,
+      "trailing_only_offset_is_reached": false
+    },
+    "max_open_trades": {
+      "max_open_trades": 3
+    },
+    "buy": {
+      "adx_threshold": 30,
+      "roc_period": 13,
+      "roc_threshold": 0.034,
+      "rsi_entry": 54
+    },
+    "sell": {
+      "rsi_exit": 43
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2026-03-12 04:23:37.515549+00:00"
+}
