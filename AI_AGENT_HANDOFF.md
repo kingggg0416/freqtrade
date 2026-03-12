@@ -58,7 +58,7 @@ The user wants to build a personal systematic trading research workflow on top o
 - Mark/funding data was also downloaded for the futures workflow.
 
 ### Strategy implementation status
-Six research strategies were created under `user_data/strategies/`, each with a matching `.md` explanation file:
+Nine research strategies were created under `user_data/strategies/`, each with a matching `.md` explanation file:
 
 1. `DailyBreakoutTrendStrategy`
 2. `EmaAdxTrendFilterStrategy`
@@ -66,6 +66,9 @@ Six research strategies were created under `user_data/strategies/`, each with a 
 4. `RegimeFilteredMeanReversionStrategy`
 5. `MomentumPulseStrategy`
 6. `VolatilityCompressionBreakoutStrategy`
+7. `TimeSeriesMomentumVolatilityStrategy`
+8. `FundingTiltMomentumStrategy`
+9. `SessionFilteredMomentumStrategy`
 
 All are futures-capable and use conservative leverage callbacks capped at `2x` or less.
 
@@ -88,29 +91,43 @@ Results:
 - `VolatilityCompressionBreakoutStrategy`
   - Hyperopt attempt did **not** complete any epoch.
   - Out-of-sample validation was still run on default params.
+- A second strategy batch based on `references/perp-trading-ideas.md` was then added and tested with **no tuning**.
+- That batch produced two useful additions:
+  - `FundingTiltMomentumStrategy`
+  - `SessionFilteredMomentumStrategy`
+- The plain `TimeSeriesMomentumVolatilityStrategy` was too weak and should not be prioritized.
 
 ---
 
 ## 3) Current research conclusion
 
 ### Current ranking by robustness
-1. `VolatilityCompressionBreakoutStrategy`
-2. `DailyBreakoutTrendStrategy`
-3. `EmaAdxTrendFilterStrategy`
-4. `MomentumPulseStrategy`
-5. `RegimeFilteredMeanReversionStrategy`
-6. `RsiBollingerMeanReversionStrategy`
+1. `FundingTiltMomentumStrategy`
+2. `VolatilityCompressionBreakoutStrategy`
+3. `SessionFilteredMomentumStrategy`
+4. `DailyBreakoutTrendStrategy`
+5. `EmaAdxTrendFilterStrategy`
+6. `MomentumPulseStrategy`
+7. `RegimeFilteredMeanReversionStrategy`
+8. `RsiBollingerMeanReversionStrategy`
+9. `TimeSeriesMomentumVolatilityStrategy`
 
 ### Interpretation
 - Breakout/trend logic is clearly outperforming the mean-reversion family in this current market/sample.
-- `VolatilityCompressionBreakoutStrategy` is the strongest current candidate because it stayed strong **out of sample without parameter tuning**.
-- `DailyBreakoutTrendStrategy` is also a credible candidate because it remained positive out of sample.
-- `MomentumPulseStrategy` is the main overfitting warning sign: decent broader-sample appearance, but weak out-of-sample generalization.
+- `FundingTiltMomentumStrategy` is now the strongest new candidate because it held up out of sample with very low drawdown and no tuning.
+- `VolatilityCompressionBreakoutStrategy` remains strong and robust.
+- `SessionFilteredMomentumStrategy` is promising, especially on the short side, but is riskier than the funding-tilted model.
+- `DailyBreakoutTrendStrategy` is still a credible slower candidate because it remained positive out of sample.
+- `MomentumPulseStrategy` remains the clearest overfitting warning sign: decent broader-sample appearance, but weak out-of-sample generalization.
 - The two mean-reversion strategies should not be prioritized unless the design thesis changes substantially.
+- The plain, conservative `TimeSeriesMomentumVolatilityStrategy` did not add value and should be deprioritized.
 
 ### Most important practical takeaway
 If only two strategies should move forward immediately, they are:
+- `FundingTiltMomentumStrategy`
 - `VolatilityCompressionBreakoutStrategy`
+
+The next slower-timeframe candidate after those is:
 - `DailyBreakoutTrendStrategy`
 
 A low-volatility secondary watchlist candidate is:
@@ -124,6 +141,9 @@ A low-volatility secondary watchlist candidate is:
 - `user_data/reports/strategy_backtest_summary_2026-03-12.md`
   - This is the main performance memo.
   - It contains full-sample and out-of-sample summaries, ranking, and recommendations.
+- `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
+  - This contains the second batch built directly from `references/perp-trading-ideas.md`.
+  - Read this before doing more work on the new ideas.
 
 ### Futures backtest config
 - `user_data/config.backtest.binance.futures.json`
@@ -136,6 +156,9 @@ A low-volatility secondary watchlist candidate is:
 - `user_data/strategies/RegimeFilteredMeanReversionStrategy.py`
 - `user_data/strategies/MomentumPulseStrategy.py`
 - `user_data/strategies/VolatilityCompressionBreakoutStrategy.py`
+- `user_data/strategies/TimeSeriesMomentumVolatilityStrategy.py`
+- `user_data/strategies/FundingTiltMomentumStrategy.py`
+- `user_data/strategies/SessionFilteredMomentumStrategy.py`
 
 ### Strategy explanation docs
 Each strategy also has a sidecar markdown explanation in the same folder.
@@ -143,6 +166,9 @@ Each strategy also has a sidecar markdown explanation in the same folder.
 ### Saved hyperopt parameter files
 - `user_data/strategies/DailyBreakoutTrendStrategy.json`
 - `user_data/strategies/MomentumPulseStrategy.json`
+
+### Reference document that drove the second batch
+- `references/perp-trading-ideas.md`
 
 ### Tracking / git behavior
 - `.gitignore`
@@ -178,11 +204,12 @@ Any continuation should favor:
 Do not recompute everything unless needed.
 Read the report first, then decide what requires fresh validation.
 
-### Compression breakout currently has the strongest evidence
+### Funding tilt and compression breakout currently have the strongest evidence
 The next agent should not lose sight of this.
 If deciding where to spend the next unit of research effort, prioritize:
-1. `VolatilityCompressionBreakoutStrategy`
-2. `DailyBreakoutTrendStrategy`
+1. `FundingTiltMomentumStrategy`
+2. `VolatilityCompressionBreakoutStrategy`
+3. `DailyBreakoutTrendStrategy`
 
 ### Known implementation note
 The `MomentumPulseStrategy.py` and `VolatilityCompressionBreakoutStrategy.py` files currently use tab-style indentation in the saved source. They validated successfully, but avoid unnecessary reformatting unless you are intentionally normalizing style.
@@ -192,19 +219,27 @@ The `MomentumPulseStrategy.py` and `VolatilityCompressionBreakoutStrategy.py` fi
 ## 6) Recommended next steps
 
 ### Highest-priority next action
-Run a **small, conservative hyperopt pass** on `VolatilityCompressionBreakoutStrategy`, then re-run out-of-sample validation.
+Run a **small, conservative hyperopt pass** on `FundingTiltMomentumStrategy`, then re-run out-of-sample validation.
 
 Why:
-- It is already the strongest strategy on default parameters.
+- It is the strongest newly added strategy on default parameters.
 - If it remains strong after minimal tuning, confidence rises.
 - If tuning hurts OOS behavior, that is also informative.
 
 ### Suggested continuation sequence
 1. Read `user_data/reports/strategy_backtest_summary_2026-03-12.md`
-2. Review `VolatilityCompressionBreakoutStrategy.py`
-3. Run a modest hyperopt only for that strategy
-4. Revalidate out of sample
-5. If still robust, explore one of these narrow refinements:
+2. Read `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
+3. Review `FundingTiltMomentumStrategy.py`
+4. Run a modest hyperopt only for that strategy
+5. Revalidate out of sample
+6. Only then compare it directly against `VolatilityCompressionBreakoutStrategy`
+
+Alternative continuation path:
+- Run the previously planned conservative hyperopt on `VolatilityCompressionBreakoutStrategy`.
+- Then compare the tuned compression breakout versus untuned or lightly tuned funding tilt.
+
+After that, consider:
+1. If still robust, explore one of these narrow refinements:
    - asymmetric long/short handling
    - short-only variant
    - slightly stricter long-side filters
@@ -216,12 +251,15 @@ Refine `DailyBreakoutTrendStrategy` with focus on:
 - possibly adding volatility or regime gating
 
 ### Lower priority
-`EmaAdxTrendFilterStrategy` can be explored as a stabilizer / low-drawdown component, but it is not the lead candidate.
+`SessionFilteredMomentumStrategy` can be explored as a bearish-regime specialist.
+
+`EmaAdxTrendFilterStrategy` can still be explored as a stabilizer / low-drawdown component, but it is not the lead candidate.
 
 ### Do not prioritize right now
 - `MomentumPulseStrategy` unless the purpose is specifically to investigate overfitting failure.
 - `RegimeFilteredMeanReversionStrategy`
 - `RsiBollingerMeanReversionStrategy`
+- `TimeSeriesMomentumVolatilityStrategy` unless its logic is redesigned.
 
 ---
 
@@ -261,6 +299,8 @@ Tracked additions/modifications relevant to the research work include:
 - strategy `.md` files in `user_data/strategies/`
 - hyperopt param json files for `DailyBreakoutTrendStrategy` and `MomentumPulseStrategy`
 - `user_data/reports/strategy_backtest_summary_2026-03-12.md`
+- `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
+- `references/perp-trading-ideas.md`
 - this file: `AI_AGENT_HANDOFF.md`
 
 ---
@@ -270,11 +310,11 @@ Tracked additions/modifications relevant to the research work include:
 Read these in order:
 1. `AI_AGENT_HANDOFF.md`
 2. `user_data/reports/strategy_backtest_summary_2026-03-12.md`
-3. `user_data/strategies/VolatilityCompressionBreakoutStrategy.py`
-4. `user_data/strategies/DailyBreakoutTrendStrategy.py`
-5. `user_data/config.backtest.binance.futures.json`
+3. `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
+4. `user_data/strategies/FundingTiltMomentumStrategy.py`
+5. `user_data/strategies/VolatilityCompressionBreakoutStrategy.py`
 
-Then continue with a very small, conservative optimization and out-of-sample validation cycle for `VolatilityCompressionBreakoutStrategy`.
+Then continue with a very small, conservative optimization and out-of-sample validation cycle for `FundingTiltMomentumStrategy`.
 
 ---
 
@@ -287,5 +327,6 @@ The next agent should build on that triage rather than restart broad exploration
 Current best path:
 - keep the research disciplined
 - prioritize robustness over headline profit
-- focus on `VolatilityCompressionBreakoutStrategy` and `DailyBreakoutTrendStrategy`
+- focus on `FundingTiltMomentumStrategy` and `VolatilityCompressionBreakoutStrategy`
+- keep `DailyBreakoutTrendStrategy` as the next slower-timeframe alternative
 - use `EmaAdxTrendFilterStrategy` only as a secondary low-drawdown candidate
