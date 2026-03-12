@@ -30,6 +30,28 @@ The user wants to build a personal systematic trading research workflow on top o
 
 ## 2) What has already been done
 
+### FreqAI research (added 2026-03-12 by second agent)
+- **FreqAI infrastructure** was built and validated end-to-end.
+- ML dependencies installed: `scikit-learn`, `lightgbm`, `xgboost`, `datasieve`.
+- New strategy created: `user_data/strategies/FreqAIRetailStrategy.py`
+  - Uses `LightGBMRegressor` (walk-forward regression)
+  - 60-day training window, 7-day retraining cycle
+  - Target: 12-candle mean forward return
+  - Features: RSI/ROC/EMA/ADX/BB/ATR/MFI across 10/20/40 periods + temporal + cross-asset
+  - Risk: max 2x leverage, 5% stoploss, trailing stop
+- New config created: `user_data/config.freqai.backtest.json`
+- Null-hypothesis validation run on synthetic GBM data (no network = no real data):
+  - LightGBM on random-walk data → PF ≈ 1.0, IC ≈ 0 (confirming methodology is unbiased)
+  - BTC: -4.9%, ETH: +3.8%, SOL: -36.4% (noise, not signal)
+  - **This is expected and correct** — no overfitting to phantom patterns
+- Feature importance analysis: ADX (regime), BB width, ATR, Donchian top features even on null data
+- Full research report: `user_data/reports/freqai_research_report_2026-03-12.md`
+- Sidecar doc: `user_data/strategies/FreqAIRetailStrategy.md`
+- **Critical next step**: Run the backtest on REAL downloaded data when network is available.
+  - Expected IC on real data: 0.02-0.05 (meaningful), 0.08+ (excellent)
+
+### Previous TA strategy research (added by first agent)
+
 ### Repository understanding
 - The repository structure was reviewed.
 - Hyperliquid support was investigated early and appears to be a realistic future pathway.
@@ -137,7 +159,17 @@ A low-volatility secondary watchlist candidate is:
 
 ## 4) Most important files to inspect first
 
-### Research summary
+### FreqAI research (most recent work)
+- `user_data/reports/freqai_research_report_2026-03-12.md`
+  - Full FreqAI methodology, null-hypothesis validation, feature importance analysis
+  - What works on real vs synthetic data
+  - Deployment guidance for $1000 accounts
+- `user_data/strategies/FreqAIRetailStrategy.py`
+  - Ready-to-run FreqAI strategy
+- `user_data/config.freqai.backtest.json`
+  - FreqAI-specific backtesting config
+
+### TA strategy research summary
 - `user_data/reports/strategy_backtest_summary_2026-03-12.md`
   - This is the main performance memo.
   - It contains full-sample and out-of-sample summaries, ranking, and recommendations.
@@ -147,7 +179,7 @@ A low-volatility secondary watchlist candidate is:
 
 ### Futures backtest config
 - `user_data/config.backtest.binance.futures.json`
-  - This is the working research config used for the strategy backtests.
+  - This is the working research config used for the TA strategy backtests.
 
 ### Strategy source files
 - `user_data/strategies/DailyBreakoutTrendStrategy.py`
@@ -218,7 +250,28 @@ The `MomentumPulseStrategy.py` and `VolatilityCompressionBreakoutStrategy.py` fi
 
 ## 6) Recommended next steps
 
-### Highest-priority next action
+### Highest-priority FreqAI action (when network is available)
+1. **Download real data**:
+   ```bash
+   python3 -m freqtrade download-data \
+     --config user_data/config.freqai.backtest.json \
+     --timeframes 1h 4h \
+     --timerange 20220101-20260301 \
+     --pairs BTC/USDT:USDT ETH/USDT:USDT SOL/USDT:USDT
+   ```
+2. **Run FreqAI backtest on real data**:
+   ```bash
+   python3 -m freqtrade backtesting \
+     --config user_data/config.freqai.backtest.json \
+     --strategy FreqAIRetailStrategy \
+     --freqaimodel LightGBMRegressor \
+     --timerange 20220301-20251231 \
+     --export trades
+   ```
+3. Check IC: expect 0.02-0.05 on real data (any lower = features not useful)
+4. If IC > 0.03: compare directly against `VolatilityCompressionBreakoutStrategy` OOS results
+
+### Highest-priority TA action
 Run a **small, conservative hyperopt pass** on `FundingTiltMomentumStrategy`, then re-run out-of-sample validation.
 
 Why:
@@ -227,22 +280,12 @@ Why:
 - If tuning hurts OOS behavior, that is also informative.
 
 ### Suggested continuation sequence
-1. Read `user_data/reports/strategy_backtest_summary_2026-03-12.md`
-2. Read `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
-3. Review `FundingTiltMomentumStrategy.py`
-4. Run a modest hyperopt only for that strategy
-5. Revalidate out of sample
-6. Only then compare it directly against `VolatilityCompressionBreakoutStrategy`
-
-Alternative continuation path:
-- Run the previously planned conservative hyperopt on `VolatilityCompressionBreakoutStrategy`.
-- Then compare the tuned compression breakout versus untuned or lightly tuned funding tilt.
-
-After that, consider:
-1. If still robust, explore one of these narrow refinements:
-   - asymmetric long/short handling
-   - short-only variant
-   - slightly stricter long-side filters
+1. Read `user_data/reports/freqai_research_report_2026-03-12.md` (FreqAI findings)
+2. Read `user_data/reports/strategy_backtest_summary_2026-03-12.md`
+3. Read `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
+4. Run FreqAI backtest on real data (see above)
+5. Run modest hyperopt on `FundingTiltMomentumStrategy`
+6. Compare all strategies in a unified ranking
 
 ### Secondary continuation option
 Refine `DailyBreakoutTrendStrategy` with focus on:
