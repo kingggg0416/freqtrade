@@ -10,6 +10,8 @@ user_data/*
 !user_data/strategies/*.py
 !user_data/strategies/*.md
 !user_data/config.backtest.binance.futures.json
+!user_data/reports/
+!user_data/reports/*.md
 !user_data/notebooks
 !user_data/models
 !user_data/freqaimodels
