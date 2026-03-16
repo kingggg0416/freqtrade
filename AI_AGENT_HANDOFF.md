@@ -58,7 +58,9 @@ The user wants to build a personal systematic trading research workflow on top o
 - Mark/funding data was also downloaded for the futures workflow.
 
 ### Strategy implementation status
-Nine research strategies were created under `user_data/strategies/`, each with a matching `.md` explanation file:
+Twenty research strategies are now in `user_data/strategies/`, each with a matching `.md` explanation file.
+
+**Original nine strategies:**
 
 1. `DailyBreakoutTrendStrategy`
 2. `EmaAdxTrendFilterStrategy`
@@ -70,7 +72,21 @@ Nine research strategies were created under `user_data/strategies/`, each with a
 8. `FundingTiltMomentumStrategy`
 9. `SessionFilteredMomentumStrategy`
 
-All are futures-capable and use conservative leverage callbacks capped at `2x` or less.
+**New strategies added (Batch 2):**
+
+10. `DualMACrossoverVolumeStrategy` — EMA crossover with volume confirmation (4h)
+11. `VWAPMeanReversionStrategy` — Rolling VWAP mean reversion in range-bound conditions (4h)
+12. `ATRChannelBreakoutStrategy` — N-period channel breakout without compression requirement (1d)
+13. `SupertrendFollowStrategy` — Supertrend flip-based trend following (4h)
+14. `IchimokuCloudBreakoutStrategy` — Ichimoku triple-confirmation cloud breakout (4h)
+15. `MACDHistogramMomentumStrategy` — MACD histogram cross with RSI filter (4h)
+16. `RiskAdjustedMomentumStrategy` — Volatility-normalized Sharpe-style momentum (4h)
+17. `FundingCarryLiteStrategy` — Pure funding carry (no trend required) (4h)
+18. `BtcRegimeAdaptiveStrategy` — BTC macro regime filter for all pairs (4h)
+19. `MarketStructureSwingStrategy` — Higher Highs / Higher Lows structure detection (1d)
+20. `TrendQualityStrategy` — Composite ADX + EMA alignment + regression slope score (4h)
+
+All strategies are futures-capable and use conservative leverage callbacks capped at `2x` or less.
 
 ### Optimization / validation work already completed
 - A conservative anti-overfitting workflow was applied.
@@ -102,6 +118,7 @@ Results:
 ## 3) Current research conclusion
 
 ### Current ranking by robustness
+*Batch 1 (previously backtested):*
 1. `FundingTiltMomentumStrategy`
 2. `VolatilityCompressionBreakoutStrategy`
 3. `SessionFilteredMomentumStrategy`
@@ -111,6 +128,19 @@ Results:
 7. `RegimeFilteredMeanReversionStrategy`
 8. `RsiBollingerMeanReversionStrategy`
 9. `TimeSeriesMomentumVolatilityStrategy`
+
+*Batch 2 (not yet backtested — design-level ordering by expected robustness):*
+10. `ATRChannelBreakoutStrategy` — closest to proven Turtle/Donchian system
+11. `TrendQualityStrategy` — ultra-selective triple-confirmation; hard to overfit
+12. `BtcRegimeAdaptiveStrategy` — macro regime filter adds genuine edge
+13. `SupertrendFollowStrategy` — well-tested indicator, clean mechanical rules
+14. `DualMACrossoverVolumeStrategy` — classic MA cross; volume filter improves selectivity
+15. `MACDHistogramMomentumStrategy` — solid momentum logic with RSI filter
+16. `RiskAdjustedMomentumStrategy` — Sharpe-style signal is theoretically sound
+17. `IchimokuCloudBreakoutStrategy` — triple-confirmation but slower entries
+18. `MarketStructureSwingStrategy` — conceptually strong; depends on swing clarity
+19. `FundingCarryLiteStrategy` — pure carry; requires high-funding episodes
+20. `VWAPMeanReversionStrategy` — requires range-bound conditions; regime-dependent
 
 ### Interpretation
 - Breakout/trend logic is clearly outperforming the mean-reversion family in this current market/sample.
@@ -139,17 +169,23 @@ A low-volatility secondary watchlist candidate is:
 
 ### Research summary
 - `user_data/reports/strategy_backtest_summary_2026-03-12.md`
-  - This is the main performance memo.
+  - This is the main performance memo for Batch 1.
   - It contains full-sample and out-of-sample summaries, ranking, and recommendations.
 - `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
   - This contains the second batch built directly from `references/perp-trading-ideas.md`.
   - Read this before doing more work on the new ideas.
+- `user_data/reports/new_strategy_batch_2_2026-03-12.md`
+  - This covers the 11 new strategies added in Batch 2 (strategies 10–20).
+  - Includes design rationale, coverage map, recommended backtesting order, and
+    anti-overfitting reminders.
+  - **No backtesting results yet** — this batch has not been run against data.
 
 ### Futures backtest config
 - `user_data/config.backtest.binance.futures.json`
   - This is the working research config used for the strategy backtests.
 
 ### Strategy source files
+**Batch 1 (9 original strategies):**
 - `user_data/strategies/DailyBreakoutTrendStrategy.py`
 - `user_data/strategies/EmaAdxTrendFilterStrategy.py`
 - `user_data/strategies/RsiBollingerMeanReversionStrategy.py`
@@ -159,6 +195,19 @@ A low-volatility secondary watchlist candidate is:
 - `user_data/strategies/TimeSeriesMomentumVolatilityStrategy.py`
 - `user_data/strategies/FundingTiltMomentumStrategy.py`
 - `user_data/strategies/SessionFilteredMomentumStrategy.py`
+
+**Batch 2 (11 new strategies):**
+- `user_data/strategies/DualMACrossoverVolumeStrategy.py`
+- `user_data/strategies/VWAPMeanReversionStrategy.py`
+- `user_data/strategies/ATRChannelBreakoutStrategy.py`
+- `user_data/strategies/SupertrendFollowStrategy.py`
+- `user_data/strategies/IchimokuCloudBreakoutStrategy.py`
+- `user_data/strategies/MACDHistogramMomentumStrategy.py`
+- `user_data/strategies/RiskAdjustedMomentumStrategy.py`
+- `user_data/strategies/FundingCarryLiteStrategy.py`
+- `user_data/strategies/BtcRegimeAdaptiveStrategy.py`
+- `user_data/strategies/MarketStructureSwingStrategy.py`
+- `user_data/strategies/TrendQualityStrategy.py`
 
 ### Strategy explanation docs
 Each strategy also has a sidecar markdown explanation in the same folder.
@@ -219,47 +268,36 @@ The `MomentumPulseStrategy.py` and `VolatilityCompressionBreakoutStrategy.py` fi
 ## 6) Recommended next steps
 
 ### Highest-priority next action
-Run a **small, conservative hyperopt pass** on `FundingTiltMomentumStrategy`, then re-run out-of-sample validation.
+**Backtest the Batch 2 strategies** to determine which ones are worth pursuing further.
 
-Why:
-- It is the strongest newly added strategy on default parameters.
-- If it remains strong after minimal tuning, confidence rises.
-- If tuning hurts OOS behavior, that is also informative.
+The recommended order (from `user_data/reports/new_strategy_batch_2_2026-03-12.md`):
+1. `ATRChannelBreakoutStrategy` (1d — closest to proven Turtle system)
+2. `TrendQualityStrategy` (4h — triple-confirmation, hard to overfit)
+3. `BtcRegimeAdaptiveStrategy` (4h — macro regime filter)
+4. `SupertrendFollowStrategy` (4h — volatility-adaptive trailing)
 
 ### Suggested continuation sequence
-1. Read `user_data/reports/strategy_backtest_summary_2026-03-12.md`
-2. Read `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
-3. Review `FundingTiltMomentumStrategy.py`
-4. Run a modest hyperopt only for that strategy
-5. Revalidate out of sample
-6. Only then compare it directly against `VolatilityCompressionBreakoutStrategy`
+1. Read `user_data/reports/strategy_backtest_summary_2026-03-12.md` (Batch 1 results)
+2. Read `user_data/reports/new_strategy_batch_2_2026-03-12.md` (Batch 2 overview)
+3. Download data if not present (see Section 7 for commands)
+4. Run full-sample backtest for each Batch 2 strategy
+5. Compare Batch 2 to Batch 1 results
+6. Run conservative hyperopt on the top 3–4 Batch 2 strategies
+7. Validate out of sample
 
-Alternative continuation path:
-- Run the previously planned conservative hyperopt on `VolatilityCompressionBreakoutStrategy`.
-- Then compare the tuned compression breakout versus untuned or lightly tuned funding tilt.
+### Once backtesting is done
+- **If `ATRChannelBreakoutStrategy` or `TrendQualityStrategy` perform similarly to
+  `VolatilityCompressionBreakoutStrategy`:** Consider running all three as a portfolio.
+- **If `BtcRegimeAdaptiveStrategy` is robust:** Use it as a regime overlay for ETH/SOL
+  positions in any combined portfolio.
+- **If `FundingCarryLiteStrategy` shows positive carry income:** Complement it with
+  `FundingTiltMomentumStrategy` as the two represent different angles on the same edge.
 
-After that, consider:
-1. If still robust, explore one of these narrow refinements:
-   - asymmetric long/short handling
-   - short-only variant
-   - slightly stricter long-side filters
-
-### Secondary continuation option
-Refine `DailyBreakoutTrendStrategy` with focus on:
-- improving short-side quality
-- reducing chop sensitivity
-- possibly adding volatility or regime gating
-
-### Lower priority
-`SessionFilteredMomentumStrategy` can be explored as a bearish-regime specialist.
-
-`EmaAdxTrendFilterStrategy` can still be explored as a stabilizer / low-drawdown component, but it is not the lead candidate.
-
-### Do not prioritize right now
-- `MomentumPulseStrategy` unless the purpose is specifically to investigate overfitting failure.
-- `RegimeFilteredMeanReversionStrategy`
-- `RsiBollingerMeanReversionStrategy`
-- `TimeSeriesMomentumVolatilityStrategy` unless its logic is redesigned.
+### Previous top candidates still prioritized
+The Batch 1 ranking still stands. Continue to prioritize:
+1. `FundingTiltMomentumStrategy`
+2. `VolatilityCompressionBreakoutStrategy`
+3. `DailyBreakoutTrendStrategy`
 
 ---
 
@@ -295,11 +333,12 @@ The current user preference favors robust iteration over aggressive parameter mi
 Tracked additions/modifications relevant to the research work include:
 - `.gitignore`
 - `user_data/config.backtest.binance.futures.json`
-- strategy `.py` files in `user_data/strategies/`
-- strategy `.md` files in `user_data/strategies/`
+- all 20 strategy `.py` files in `user_data/strategies/`
+- all 20 strategy `.md` explanation files in `user_data/strategies/`
 - hyperopt param json files for `DailyBreakoutTrendStrategy` and `MomentumPulseStrategy`
 - `user_data/reports/strategy_backtest_summary_2026-03-12.md`
 - `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
+- `user_data/reports/new_strategy_batch_2_2026-03-12.md` (new)
 - `references/perp-trading-ideas.md`
 - this file: `AI_AGENT_HANDOFF.md`
 
@@ -309,24 +348,37 @@ Tracked additions/modifications relevant to the research work include:
 
 Read these in order:
 1. `AI_AGENT_HANDOFF.md`
-2. `user_data/reports/strategy_backtest_summary_2026-03-12.md`
-3. `user_data/reports/perp_trading_ideas_strategy_batch_2026-03-12.md`
-4. `user_data/strategies/FundingTiltMomentumStrategy.py`
-5. `user_data/strategies/VolatilityCompressionBreakoutStrategy.py`
+2. `user_data/reports/strategy_backtest_summary_2026-03-12.md` (Batch 1 backtest results)
+3. `user_data/reports/new_strategy_batch_2_2026-03-12.md` (Batch 2 overview — not yet tested)
+4. `user_data/strategies/FundingTiltMomentumStrategy.py` (current best from Batch 1)
+5. `user_data/strategies/ATRChannelBreakoutStrategy.py` (highest-priority to test from Batch 2)
 
-Then continue with a very small, conservative optimization and out-of-sample validation cycle for `FundingTiltMomentumStrategy`.
+Then start with backtesting `ATRChannelBreakoutStrategy` as the first Batch 2 priority.
 
 ---
 
 ## 10) Bottom line
 
-The project is in a good state.
-The main work already done was not just strategy creation, but **strategy triage**.
-The next agent should build on that triage rather than restart broad exploration.
+The project has now reached 20 strategies across a diverse set of conceptual approaches.
+The triage from Batch 1 still stands — `FundingTiltMomentumStrategy` and
+`VolatilityCompressionBreakoutStrategy` are the current best validated candidates.
+
+Batch 2 adds 11 new strategies that have not yet been backtested. The **highest-priority
+next step** is to run backtests on at least the top 4 Batch 2 strategies to identify
+which ones perform competitively.
+
+Strategy diversity by category (across all 20):
+- Trend following / breakout: 7 strategies
+- Momentum: 4 strategies
+- Mean reversion: 3 strategies
+- Regime filtering / adaptive: 2 strategies
+- Carry / funding: 2 strategies
+- Composite quality scoring: 1 strategy
+- Ichimoku / classical systems: 1 strategy
 
 Current best path:
-- keep the research disciplined
-- prioritize robustness over headline profit
-- focus on `FundingTiltMomentumStrategy` and `VolatilityCompressionBreakoutStrategy`
-- keep `DailyBreakoutTrendStrategy` as the next slower-timeframe alternative
-- use `EmaAdxTrendFilterStrategy` only as a secondary low-drawdown candidate
+- Keep the research disciplined and avoid overfitting
+- Backtest Batch 2 in order of expected robustness
+- Compare Batch 2 top performers vs Batch 1 top performers
+- Only advance strategies with positive out-of-sample behavior
+- Do not deploy live until at least 2–3 strategies show consistent out-of-sample results
