@@ -53,6 +53,18 @@ python user_data/scripts/backtest_ai.py \
   --export user_data/backtest_results/freqai_2023.json
 ```
 
+Validated run in this workspace:
+
+```bash
+python user_data/scripts/backtest_ai.py --timerange 20230401-20230930
+```
+
+Why this window was used:
+
+- Current local futures data starts at `2023-01-01`.
+- FreqAI setup uses a long startup/training warmup, so very early timeranges can fail.
+- Start from April 2023 (or download more pre-history) for stable retraining cycles.
+
 ## Ordinary backtesting remains separate
 
 Use your normal command path for ordinary strategies:

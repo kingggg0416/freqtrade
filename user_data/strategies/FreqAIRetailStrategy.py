@@ -121,20 +121,18 @@ class FreqAIRetailStrategy(IStrategy):
         return dataframe
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        return self.freqai.start(dataframe, metadata, self)
+        dataframe = self.freqai.start(dataframe, metadata, self)
+        dataframe["adx"] = ta.ADX(dataframe, timeperiod=14)
+        return dataframe
 
     def populate_entry_trend(self, df: DataFrame, metadata: dict) -> DataFrame:
         threshold = self.entry_threshold.value
         adx_min = self.adx_filter.value
 
-        adx_col = "%-adx-period_1h"
-        if adx_col not in df.columns:
-            adx_col = "%-adx-period"
-
         long_conditions = [
             df["do_predict"] == 1,
             df["&-s_close"] > threshold,
-            df[adx_col] > adx_min,
+            df["adx"] > adx_min,
         ]
         df.loc[reduce(lambda x, y: x & y, long_conditions), ["enter_long", "enter_tag"]] = (
             1,
@@ -144,7 +142,7 @@ class FreqAIRetailStrategy(IStrategy):
         short_conditions = [
             df["do_predict"] == 1,
             df["&-s_close"] < -threshold,
-            df[adx_col] > adx_min,
+            df["adx"] > adx_min,
         ]
         df.loc[reduce(lambda x, y: x & y, short_conditions), ["enter_short", "enter_tag"]] = (
             1,

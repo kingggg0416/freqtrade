@@ -2,7 +2,12 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from xgboost.callback import TrainingCallback
+try:
+    from xgboost.callback import TrainingCallback
+except ModuleNotFoundError:
+    # FreqAI backtesting may run with models that do not require xgboost.
+    class TrainingCallback:  # type: ignore[no-redef]
+        EvalsLog = Any
 
 
 logger = logging.getLogger(__name__)
